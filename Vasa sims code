@@ -1,0 +1,103 @@
+// vasa reg 0 crystal simulations
+
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string>
+
+using namespace std;
+#include <random>
+
+bool splash = false;
+
+int TbowMaxFirstHit = 55; // max hit, ranging potion, no rigour, no anguish
+int TbowMaxRapid = 70; // max hit, ranging potion, rigour, anguish
+int TbowMaxAccurate = 72; // max hit, ranging potion, rigour, anguish, accurate
+
+int TbowAccuracyBonus = 152; // accuracy bonuses with solo gear, but inq helm and prim boots (no takeoffs)
+int VasaRangeDefBonus = 60; // vasa ranged def bonus
+int VasaDefLevel = 175; // vasa def level
+
+int effectiverangedlevelfirsthit = 120; int effectiverangedlevelrapid = 142; int effectiverangedlevelaccurate = 145;
+
+int MaxRangeDefroll = ((VasaRangeDefBonus + 64) * (VasaDefLevel + 8 + 1)); // range defence max roll
+
+int MaxAttackRollFirstHit = effectiverangedlevelfirsthit * (TbowAccuracyBonus - 15 + 64) * 1.37; // -15 is because no anguish, 1.37 tbow modifier, no rigour
+int MaxAttackRollRapid = effectiverangedlevelrapid * (TbowAccuracyBonus + 64) * 1.37;
+int MaxAttackRollAccurate = effectiverangedlevelaccurate * (TbowAccuracyBonus + 64) * 1.37;
+
+int noob = 0; int pog = 0;
+int threebowko = 0;
+random_device rd;
+mt19937 gen(time(NULL));
+
+//function for random generating number for attack/def rolls
+int getRandom(int from, int to) {
+	uniform_int_distribution<int> distribution(from,to);
+	return distribution(gen);
+}
+
+int main()
+{
+    for (int i = 1; i <= 10000000; i++)
+    {
+        int dpa = 0;
+        int VasaHp = 300 - 87; // veng damage
+// ----------------------- first hit ------------------------------
+        double defroll = getRandom(0,MaxRangeDefroll);
+        double attroll = getRandom(0, MaxAttackRollFirstHit);
+        if ( attroll > defroll )
+        {
+            splash = false;
+            dpa = getRandom(0,TbowMaxFirstHit);
+        }
+        else splash = true;
+        VasaHp = VasaHp - dpa;
+// ----------------------- second hit ------------------------------
+        defroll = getRandom(0,MaxRangeDefroll);
+        attroll = getRandom(0, MaxAttackRollRapid);
+        if ( attroll > defroll )
+        {
+            splash = false;
+            dpa = getRandom(0,TbowMaxRapid);
+        }
+        else splash = true;
+        VasaHp = VasaHp - dpa;
+// ----------------------- third hit -------------------------------
+        defroll = getRandom(0,MaxRangeDefroll);
+        attroll = getRandom(0, MaxAttackRollRapid);
+        if ( attroll > defroll )
+        {
+            splash = false;
+            dpa = getRandom(0,TbowMaxRapid);
+        }
+        else splash = true;
+        VasaHp = VasaHp - dpa;
+        if (VasaHp <= 0)
+            threebowko++;
+// ----------------------- fourth hit ------------------------------
+        defroll = getRandom(0,MaxRangeDefroll);
+        attroll = getRandom(0, MaxAttackRollAccurate);
+        if ( attroll > defroll )
+        {
+            splash = false;
+            dpa = getRandom(0,TbowMaxAccurate);
+        }
+        else splash = true;
+        VasaHp = VasaHp - dpa;
+// ------------------------------- tracking variables ----------------------------
+        if (VasaHp > 0)
+            noob++;
+        if (VasaHp <= 0)
+            pog++;
+
+    }
+    cout << "Vasa was killed " << pog << " times" << endl;
+    cout << "Vasa was not killed " << noob << " times" << endl;
+    double percent = (double) pog / (pog + noob)*100;
+    double oneinx = (double) 1 / percent * 100;
+    cout << "Chance of killing vasa before it touches crystal is approx. " << percent << " % or 1 in " << oneinx << endl;
+    cout << "You killed vasa in 3 Tbow hits " << threebowko << " times." << endl; // check if maybe you killed in 3 hits
+}
