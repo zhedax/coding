@@ -1,0 +1,205 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string>
+#include <locale>
+using namespace std;
+#include <random>
+
+random_device rd;
+mt19937 gen(time(NULL));
+
+// player info
+int dwhmax = 75; int dwh_accuracy_bonus = 191;
+int macemax_accurate = 51; int macemax_aggressive = 52; int mace_accuracy_bonus = 191;
+int scythemax = 47; int scythe_accuracy_bonus = 98; int tektonmaxorange = 78; int tektonmaxred = 87;
+int mage_accuracy = 148; // if hit lands, def level reduced by 24
+
+int effective_mage_level = floor(109 * 1.25 + 8 + 1); // heart, augury, long ranged, all possible mage gear with prims (no take off)
+int effective_attack_level_accurate = floor((118 * 1.20 + 3 + 8) * 1.025); int effective_attack_level_aggressive = floor((118 * 1.20 + 8) * 1.025);
+int effectvie_def_level = floor((88 * 1.25 + 8 + 1)); int crush_def_bonuses = 222;
+
+// tekton info
+int tekton_attack_level = 585; int tekton_strength_level = 585; int tekton_mage_level = 246; int tekton_attack_bonuses = 64;
+int tekton_crush_def_bonuses_enraged = 180; int tekton_crush_def_bonuses = 105;
+
+//
+int lowestplayerhp = 121; int lowesttektonhp = 450;
+
+// --------------------------------------------------- FUNCTIONS -------------------------------------------- //
+
+// function to outline numbers with thousand separators in output
+struct separate_thousands : std::numpunct<char>
+{
+    char_type do_thousands_sep() const override { return '`'; }  // separate with commas
+    string_type do_grouping() const override { return "\3"; } // groups of 3 digit
+};
+
+// function to generate random number in some interval
+int getRandom(int from, int to)
+{
+    uniform_int_distribution<int> distribution(from,to);
+	return distribution(gen);
+}
+
+// max def roll function
+int maxdefroll (int deflevel, int defbonuses)
+{
+    return (deflevel + 9) * (defbonuses + 64);
+}
+
+// max attack roll function
+int maxattroll (int attlevel, int attbonuses)
+{
+    return attlevel * (attbonuses + 64);
+}
+
+// dpa function
+int hit(int atk, int def, int maks)
+{
+    double attroll = getRandom(0, atk);
+    double defroll = getRandom(0, def);
+    int temp = 0;
+
+	if ( attroll > defroll )
+    {
+        temp = getRandom(0, maks);
+        return temp;
+    }
+	else return 0;
+}
+
+// scythe dpa function
+int hitscythe(int atk, int def, int maks)
+{
+    int temp = 0;
+	temp = temp + hit(atk, def, maks);
+	temp = temp + hit(atk, def, maks/2);
+	temp = temp + hit(atk, def, maks/4);
+	return temp;
+}
+
+int main ()
+{
+    int dpa = 0; int tektonhit = 0;
+    int zeroanvil = 0;
+    int loops = 1000000;
+    auto thousands = std::make_unique<separate_thousands>();
+    cout.imbue(std::locale(std::cout.getloc(), thousands.release()));
+    for (int i = 1; i <= loops; i++)
+    {
+        int tekton_defence_level = 246;
+        int tektonhp = 450;
+        int playerhp = 121;
+        int vengcount = 0;
+
+        //vulnerability
+        double attroll = getRandom(0, maxattroll(effective_mage_level, mage_accuracy));
+        double defroll = getRandom(0, maxdefroll(tekton_mage_level, 0));
+        int brimcheck = getRandom(1, 4);
+        if (brimcheck == 4)
+            defroll = 0.9 * defroll;
+        if (attroll > defroll)
+            tekton_defence_level = ceil(tekton_defence_level * 0.9);
+
+        //dragon warhammer #1
+        dpa = hit(maxattroll(effective_attack_level_accurate, dwh_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), dwhmax);
+        if (dpa > 0)
+        {
+            tekton_defence_level = ceil(tekton_defence_level * 0.7);
+            tektonhp = tektonhp - dpa;
+        }
+        else tekton_defence_level = ceil(tekton_defence_level * 0.95);
+
+        //tekton hits player first time
+        tektonhit = hit(maxattroll(tekton_attack_level, tekton_attack_bonuses),maxdefroll(effectvie_def_level, crush_def_bonuses), tektonmaxorange);
+        if (tektonhit > 0)
+        {
+            vengcount++;
+            playerhp = playerhp - tektonhit;
+            tektonhp = tektonhp - floor(tektonhit * 0.75); // vengeance
+        }
+
+        //dragon warhammer #2
+        dpa = hit(maxattroll(effective_attack_level_accurate, dwh_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), dwhmax);
+        if (dpa > 0)
+        {
+            tekton_defence_level = ceil(tekton_defence_level * 0.7);
+            tektonhp = tektonhp - dpa;
+        }
+        else tekton_defence_level = ceil(tekton_defence_level * 0.95);
+
+        //tekton hits player second time
+        tektonhit = hit(maxattroll(tekton_attack_level, tekton_attack_bonuses),maxdefroll(effectvie_def_level, crush_def_bonuses), tektonmaxorange);
+        if (tektonhit > 0)
+        {
+            vengcount++;
+            if (playerhp <= tektonmaxorange)
+            {
+                playerhp = playerhp - floor(tektonhit / 2);
+                tektonhp = tektonhp - floor(tektonhit / 2 * 0.75); // vengeance
+            }
+            else
+            {
+                playerhp = playerhp - tektonhit;
+                tektonhp = tektonhp - floor(tektonhit * 0.75); // vengeance
+            }
+        }
+
+        // mace
+        dpa = hit(maxattroll(effective_attack_level_accurate, mace_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), macemax_aggressive);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+
+        //tekton hits player third time, in case both venges were not popped
+        tektonhit = hit(maxattroll(tekton_attack_level, tekton_attack_bonuses),maxdefroll(effectvie_def_level, crush_def_bonuses), tektonmaxorange);
+        if (tektonhit > 0 && vengcount < 2)
+        {
+            if (playerhp <= tektonmaxorange)
+            {
+                playerhp = playerhp - floor(tektonhit / 2);
+                tektonhp = tektonhp - floor(tektonhit / 2 * 0.75); // vengeance
+            }
+            else
+            {
+                playerhp = playerhp - tektonhit;
+                tektonhp = tektonhp - floor(tektonhit * 0.75); // vengeance
+            }
+        }
+        
+        // 2nd and 3rd mace
+        dpa = hit(maxattroll(effective_attack_level_accurate, mace_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), macemax_aggressive);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+        dpa = hit(maxattroll(effective_attack_level_accurate, mace_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), macemax_aggressive);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+
+
+        // scythe with pull
+        dpa = hitscythe(maxattroll(effective_attack_level_aggressive, scythe_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), scythemax);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+
+
+        // mace * 1
+        dpa = hit(maxattroll(effective_attack_level_accurate, mace_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), macemax_aggressive);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+
+
+        // scythe * 2
+        dpa = hitscythe(maxattroll(effective_attack_level_aggressive, scythe_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), scythemax);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+        dpa = hitscythe(maxattroll(effective_attack_level_aggressive, scythe_accuracy_bonus), maxdefroll(tekton_defence_level, tekton_crush_def_bonuses), scythemax);
+        if (dpa > 0) tektonhp = tektonhp - dpa;
+
+        if (tektonhp <= 0) zeroanvil++;
+        if (lowestplayerhp > playerhp) lowestplayerhp = playerhp;
+        if (lowesttektonhp > tektonhp) lowesttektonhp = tektonhp;
+    }
+    cout << "Lowest player hp left was: " << lowestplayerhp << endl;
+    cout << "Lowest tekton hp left was: " << lowesttektonhp << endl;
+    double percent = (double)zeroanvil / loops * 100;
+    double oneinx = 1 / (percent/100);
+    cout << "Tekton was killed " << zeroanvil << " times before it touched anvil out of " << loops << " times." << endl;
+    cout << "Chance getting 0 anvil tekton is " << percent << "% or 1 in " << oneinx << endl;
+}
