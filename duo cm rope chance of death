@@ -1,0 +1,107 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string>
+#include <locale>
+using namespace std;
+#include <random>
+
+random_device rd;
+mt19937 gen(time(NULL));
+
+// function to generate random number in some interval
+int getRandom(int from, int to)
+{
+    uniform_int_distribution<int> distribution(from,to);
+	return distribution(gen);
+}
+
+// max def roll function
+int maxdefroll (int deflevel, int defbonuses)
+{
+    return (deflevel) * (defbonuses + 64);
+}
+
+// max attack roll function
+int maxattroll (int attlevel, int attbonuses)
+{
+    return attlevel * (attbonuses + 64);
+}
+
+// dpa function
+int hit(int atk, int def, int maks)
+{
+    double attroll = getRandom(0, atk);
+    double defroll = getRandom(0, def);
+    int temp = 0;
+    maks = maks / 2; // praying mage
+	if ( attroll > defroll )
+    {
+        temp = getRandom(0, maks);
+        return temp;
+    }
+	else return 0;
+}
+// ---------------------------- variables ------------------------- //
+// magers info
+int mager_max = 35;
+int mager_mage_level = 339 + 9; int mager_attack_bonuses = 0;
+
+//player info
+int magic_def_bonuses_tometortzerk = 166; // tome, torture, berserker ring
+int magic_def_bonuses_elytortzerk = 160;
+int magic_def_bonuses_arcanebfbrim = 181;
+int magic_def_bonuses_elybfbrim = 181;
+
+int effective_mage_def_level = floor(floor(120 * 1.25) * 0.7) + floor(floor((120 * 1.25) + 8 + 1) * 0.3); // this magic defence roll applies only to players, to npcs its just defence roll based on your defence level
+
+
+// ----------------------------
+int main()
+{
+    int loops = 1000000;
+    int dpa = 0;
+    int death = 0;
+    int totaldmg = 0;
+    int tookhit = 0;
+    int tanked = 0;
+    for (int i = 1; i <= loops; i++)
+    {
+        int playerhp = 115;
+        for (int hits = 1; hits <= 7; hits++)
+        {
+            dpa = hit(maxattroll(mager_mage_level, mager_attack_bonuses), maxdefroll(effective_mage_def_level, magic_def_bonuses_tometortzerk), mager_max);
+            playerhp = playerhp - dpa;
+            totaldmg = totaldmg + dpa;
+            if (dpa > 0) tookhit++;
+            if (dpa == 0) tanked++;
+            //cout << playerhp << endl;
+            dpa = hit(maxattroll(mager_mage_level, mager_attack_bonuses), maxdefroll(effective_mage_def_level, magic_def_bonuses_tometortzerk), mager_max);
+            playerhp = playerhp - dpa;
+            totaldmg = totaldmg + dpa;
+            if (dpa > 0) tookhit++;
+            if (dpa == 0) tanked++;
+            //cout << playerhp << endl;
+        }
+        if (playerhp <= 0) death++;
+        //cout << endl;
+    }
+    cout << "deaths occured " << death << " times." << endl;
+    cout << "chance of death is " << (double) death/loops * 100 << "%. " << endl;
+    cout << "average dpa from magers in 7 sets of hits is " << (double) totaldmg/loops << endl;
+    cout << "Max att roll: " << maxattroll(mager_mage_level, mager_attack_bonuses) << endl;
+    cout << "Max def roll: " << maxdefroll(effective_mage_def_level, magic_def_bonuses_tometortzerk) << endl;
+}
+
+output:
+deaths occured 213 times.
+chance of death is 0.0213%.
+average dpa from magers in 7 sets of hits is 37.8926
+Max att roll: 22272
+Max def roll: 34960
+
+Process returned 0 (0x0)   execution time : 1.698 s
+Press any key to continue.
