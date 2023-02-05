@@ -1,0 +1,112 @@
+// vasa cm trio 0 crystal simulations
+
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string>
+
+using namespace std;
+#include <random>
+
+bool splash = false;
+
+int zcbspec = 110; // max hit, no rigour, 120 ranged
+int TbowMax = 96; // max hit, rigour, 120 ranged
+
+int max_att_roll_zcb_spec = 36736 * 2; // no rigour
+int max_att_roll_tbow = 52561;
+int max_att_roll_tbow_accurate = 53599;
+int MaxRangeDefroll = 34224; // ((VasaRangeDefBonus + 64) * (VasaDefLevel + 8 + 1))
+
+int kill = 0; int noodle = 0;
+int sims = 100000;
+random_device rd;
+mt19937 gen(time(NULL));
+
+//function for random generating number for attack/def rolls
+int getRandom(int from, int to) {
+	uniform_int_distribution<int> distribution(from,to);
+	return distribution(gen);
+}
+
+int main()
+{
+    for (int i = 1; i <= sims; i++) // kiek simuliaciju
+    {
+        int dpa = 0;
+        int VasaHp = 900;
+        //cout << "Vasa hp at the start: " << VasaHp << endl;
+        VasaHp = 900 - 57*3; // veng damage
+        //cout << "Vasa hp after veng:" << VasaHp << endl;
+        
+        
+        
+        //cout << "zcb specs begin" << endl;
+        for (int j = 1; j <= 3; j++) // zcb specs cycle
+        {
+            double defroll = getRandom(0,MaxRangeDefroll);
+            double attroll = getRandom(0, max_att_roll_zcb_spec);
+            if ( attroll > defroll )
+            {
+                splash = false;
+                VasaHp = VasaHp - zcbspec;
+            }
+            else splash = true;
+            //cout << "Vasa hp " << VasaHp << endl;
+        }
+        
+        
+        
+        
+        //cout << "tbow rapid begins (6 hits)" << endl;
+        for (int k = 1; k <= 6; k++) // tbow cycle, rapid
+        {
+            double defroll = getRandom(0,MaxRangeDefroll);
+            double attroll = getRandom(0, max_att_roll_tbow);
+            if ( attroll > defroll )
+            {
+                dpa = getRandom(0,TbowMax);
+                splash = false;
+                VasaHp = VasaHp - dpa;
+            }
+            else splash = true;
+            //cout << "Vasa hp " << VasaHp << endl;
+        }
+        
+        
+        
+        
+        //cout << "Accurate bow begins (3 hits)" << endl;
+        for (int n = 1; n <= 3; n++) // tbow cycle, accurate
+        {
+            double defroll = getRandom(0,MaxRangeDefroll);
+            double attroll = getRandom(0, max_att_roll_tbow_accurate);
+            if ( attroll > defroll )
+            {
+                dpa = getRandom(0,TbowMax);
+                splash = false;
+                VasaHp = VasaHp - dpa;
+            }
+            else splash = true;
+            //cout << "Vasa hp " << VasaHp << endl;
+        }
+        // --------------- tracking variables --------------------
+        if (VasaHp > 0)
+        {
+            noodle = noodle +1;
+        }
+        if (VasaHp <= 0)
+        {
+            kill = kill +1;
+        }
+        
+    }
+    cout << "simulations ran: " << sims << endl;
+    cout << "Vasa was killed " << kill << " times" << endl;
+    cout << "Vasa was not killed " << noodle << " times" << endl;
+    double percent = (double) kill / (kill + noodle)*100;
+    double oneinx = (double) 1 / percent * 100;
+    cout << "0 crystal chance is approx. " << percent << " % or 1 in " << oneinx << endl;
+}
