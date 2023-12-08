@@ -1,0 +1,143 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string>
+#include <locale>
+using namespace std;
+#include <random>
+
+random_device rd;
+mt19937 gen(time(NULL));
+
+// ------------------------------------- FUNCTIONS -------------------------------------------- //
+// function to outline numbers with thousand separators in output
+struct separate_thousands : std::numpunct<char>
+{
+    char_type do_thousands_sep() const override { return '`'; }  // separate with commas
+    string_type do_grouping() const override { return "\3"; } // groups of 3 digit
+};
+
+// function to generate random number in some interval
+int getRandom(int from, int to)
+{
+    uniform_int_distribution<int> distribution(from,to);
+	return distribution(gen);
+}
+
+// max def roll function
+int maxdefroll (int deflevel, int defbonuses)
+{
+    return (deflevel + 9) * (defbonuses + 64);
+}
+
+// spec weapons dpa function
+int hit(int atk, int def, int maks)
+{
+    double attroll = getRandom(0, atk);
+    double defroll = getRandom(0, def);
+    int temp = 0;
+
+	if ( attroll > defroll )
+    {
+        temp = getRandom(0, maks);
+        return temp;
+    }
+	else return 0;
+}
+
+// scythe dpa function
+int hitscythe(int atk, int def, int maks)
+{
+    int temp = 0;
+	temp = temp + hit(atk, def, maks);
+	temp = temp + hit(atk, def, maks/2);
+	temp = temp + hit(atk, def, maks/4);
+	return temp;
+}
+
+int main ()
+{
+    // player info
+    int dwhspecmax = 76; int maxdwhroll = 34720; // torva, torture, no ring
+    int bgsspecmax = 73; int bgsmaxroll = 35416 * 2; // spec has double accuracy, torture, no ring
+    int scythemax = 50; int maxscytheroll = 32072; // torva, torture, no ring
+    int vulnmaxroll = 27550; // harm hear, no ring, with prims on, heart, augury
+
+    // tekton info
+
+    int loops = 1000000;
+    int success = 0;
+    int fail = 0;
+    for (int j = 1; j <= loops; j++)
+    {
+        int dpa = 0;
+        int tektonhp = 900; // duo scale
+        int tektondeflvl = 248; int tektoncrushbonus = 105; int tektonslashbonus = 165; int tektonmagelevel = 265; // duo scale stats
+        int tektonmageroll = 17536;
+        tektonhp = 900 - 90; // veng dmg
+    //vulnerability
+        double attroll = getRandom(0, vulnmaxroll);
+        double defroll = getRandom(0, tektonmageroll);
+        if (attroll > defroll)
+        tektondeflvl = ceil(tektondeflvl * 0.9);
+    
+    //dragon warhammer #1
+        dpa = hit(maxdwhroll, maxdefroll(tektondeflvl, tektoncrushbonus), dwhspecmax);
+        if (dpa > 0)
+        {
+            tektondeflvl = ceil(tektondeflvl * 0.7);
+            tektonhp = tektonhp - dpa;
+        }
+        else tektondeflvl = ceil(tektondeflvl * 0.95);
+
+    //dragon warhammer #2
+        dpa = hit(maxdwhroll, maxdefroll(tektondeflvl, tektoncrushbonus), dwhspecmax);
+        if (dpa > 0)
+        {
+            tektondeflvl = ceil(tektondeflvl * 0.7);
+            tektonhp = tektonhp - dpa;
+        }
+        else tektondeflvl = ceil(tektondeflvl * 0.95);
+
+    //bgs #1
+        dpa = hit(bgsmaxroll, maxdefroll(tektondeflvl, tektonslashbonus), bgsspecmax);
+        if (dpa > 0)
+        {
+            tektondeflvl = ceil(tektondeflvl - dpa);
+            tektonhp = tektonhp - dpa;
+        }
+        else tektondeflvl = ceil(tektondeflvl - 10);
+    
+    //bgs #2
+        dpa = hit(bgsmaxroll, maxdefroll(tektondeflvl, tektonslashbonus), bgsspecmax);
+        if (dpa > 0)
+        {
+            tektondeflvl = ceil(tektondeflvl - dpa);
+            tektonhp = tektonhp - dpa;
+        }
+        else tektondeflvl = ceil(tektondeflvl - 10);
+        if (tektondeflvl < 0) tektondeflvl = 0;
+
+    // scythe goes swoosh
+        for (int i = 1; i <= 12; i++)
+        {
+            dpa = hitscythe(maxscytheroll, maxdefroll(tektondeflvl, tektonslashbonus), scythemax);
+            if (dpa > 0) tektonhp = tektonhp - dpa;
+        }
+        if (tektonhp < 0)
+        {
+            success = success + 1;
+            
+        }
+        else fail = fail + 1;
+    }
+    double percent = (double)success / loops * 100;
+    double oneinx = 1 / (percent/100);
+    cout << "simulation ran for " << loops << " times to kill tekton in duo scale cm." << endl;
+    cout << "Tekton was killed " << success << " times before it touched anvil out of " << loops << " times." << endl;
+    cout << "Chance getting 0 anvil tekton is " << percent << "% or 1 in " << oneinx << endl;
+}
+    
