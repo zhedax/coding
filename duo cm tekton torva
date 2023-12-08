@@ -138,6 +138,6 @@ int main ()
     double oneinx = 1 / (percent/100);
     cout << "simulation ran for " << loops << " times to kill tekton in duo scale cm." << endl;
     cout << "Tekton was killed " << success << " times before it touched anvil out of " << loops << " times." << endl;
-    cout << "Chance getting 0 anvil tekton is " << percent << "% or 1 in " << oneinx << endl;
+    cout << "Chance getting 0 anvil tekton is " << setprecision(3) << percent << "% or 1 in " << oneinx << endl;
 }
     
