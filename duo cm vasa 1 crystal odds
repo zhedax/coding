@@ -83,7 +83,7 @@ int main ()
         int dpa = 0;
         int vasahp = 900; // duo scale
         int vasadeflvl = 264; int vasarangedefbonus = 60;
-        vasahp = 900-88; // veng dmg
+        vasahp = 900; // veng dmg
 
     // zcb specs
         dpa = zaryte(zcbrollsleep, maxdefroll(vasadeflvl, vasarangedefbonus));
@@ -92,7 +92,7 @@ int main ()
         dpa = zaryte(zcbrollanonim, maxdefroll(vasadeflvl, vasarangedefbonus));
         vasahp = vasahp - dpa;
         
-    // scythe goes swoosh
+    // tbow goes kaboom
         for (int i = 1; i <= 10; i++)
         {
             dpa = hit(tbowrolla, maxdefroll(vasadeflvl, vasarangedefbonus), tbowmaxa);
