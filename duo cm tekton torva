@@ -61,9 +61,9 @@ int hitscythe(int atk, int def, int maks)
 int main ()
 {
     // player info
-    int dwhspecmax = 76; int maxdwhroll = 34720; // torva, torture, no ring
-    int bgsspecmax = 73; int bgsmaxroll = 35416 * 2; // spec has double accuracy, torture, no ring
-    int scythemax = 50; int maxscytheroll = 32072; // torva, torture, no ring
+    int dwhspecmax = 78; int maxdwhroll = 34048; // torva, torture, bellator ring
+    int bgsspecmax = 75; int bgsmaxroll = 37697 * 2; // spec has double accuracy, torture, bellator ring
+    int scythemax = 49; int maxscytheroll = 34419; // torva, torture, bellator
     int vulnmaxroll = 27550; // harm hear, no ring, with prims on, heart, augury
 
     // tekton info
@@ -85,7 +85,7 @@ int main ()
         tektondeflvl = ceil(tektondeflvl * 0.9);
     
     //dragon warhammer #1
-        dpa = hit(maxdwhroll, maxdefroll(tektondeflvl, tektoncrushbonus), dwhspecmax);
+        dpa = getRandom(1, dwhspecmax); // 1st dwh always lands
         if (dpa > 0)
         {
             tektondeflvl = ceil(tektondeflvl * 0.7);
@@ -122,7 +122,7 @@ int main ()
         if (tektondeflvl < 0) tektondeflvl = 0;
 
     // scythe goes swoosh
-        for (int i = 1; i <= 12; i++)
+        for (int i = 1; i <= 13; i++) // assumes door lure, so player who lures does vuln + 2x bgs + 5x scythe. 2nd player does 2x dwh and 8 scythes
         {
             dpa = hitscythe(maxscytheroll, maxdefroll(tektondeflvl, tektonslashbonus), scythemax);
             if (dpa > 0) tektonhp = tektonhp - dpa;
