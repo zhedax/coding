@@ -1,4 +1,4 @@
-// vasa cm trio 0 crystal simulations
+// vasa cm trio 0 crystal simulations last updated 2024-06-29 with all changes
 
 #include <iostream>
 #include <iomanip>
@@ -15,9 +15,10 @@ bool splash = false;
 int zcbspec = 110; // max hit, no rigour, 120 ranged
 int TbowMax = 96; // max hit, rigour, 120 ranged
 
-int max_att_roll_zcb_spec = 36736 * 2; // no rigour
-int max_att_roll_tbow = 52561;
-int max_att_roll_tbow_accurate = 53599;
+int max_att_roll_zcb_spec = 46816 * 2; // with rigour
+int max_att_roll_zcb_spec_no_rig = 39424 * 2; // no rigour
+int max_att_roll_tbow = 57030; // with rigour
+int max_att_roll_tbow_accurate = 57030;
 int MaxRangeDefroll = 34224; // ((VasaRangeDefBonus + 64) * (VasaDefLevel + 8 + 1))
 
 int kill = 0; int noodle = 0;
@@ -33,7 +34,7 @@ int getRandom(int from, int to) {
 
 int main()
 {
-    for (int i = 1; i <= sims; i++) // kiek simuliaciju
+    for (int i = 1; i <= sims; i++) // number of sims
     {
         int dpa = 0;
         int VasaHp = 900;
